@@ -1,7 +1,7 @@
 {
     "name": "lawrence/fast-model-factory",
     "type": "library",
-    "keywords": ["laravel", "framework", "validation"],
+    "keywords": ["laravel", "framework", "fast"],
     "description": "Make models even faster!",
     "license": "MIT",
     "authors": [
