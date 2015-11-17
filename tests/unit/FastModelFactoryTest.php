@@ -82,6 +82,20 @@ class FastModelFactoryTest extends Illuminate\Foundation\Testing\TestCase
         $this->seeInDatabase('roles', array_get($update_data, 'role'));
     }
 
+    public function testUpdateNoIdOnBelongsTo()
+    {
+        $data = ['first_name' => 'John', 'last_name' => 'Doe'];
+        $user = Factory::create(User::class, $data);
+        $update_data = ['id' => $user->id, 'first_name' => 'John', 'last_name' => 'Doe',
+        'role' => ['title' => 'super user update']];
+        $user = Factory::update(User::class, $update_data);
+
+        $this->assertNotNull($user->role);
+        $this->seeInDatabase('users', array_only($update_data, ['id', 'first_name', 'last_name']));
+        $this->seeInDatabase('roles', array_get($update_data, 'role'));
+
+    }
+
     public function testCreateWithHasOne()
     {
         $data = ['first_name' => 'John', 'last_name' => 'Doe',
@@ -100,6 +114,19 @@ class FastModelFactoryTest extends Illuminate\Foundation\Testing\TestCase
         $user = Factory::create(User::class, $data);
         $update_data = ['id' => $user->id, 'first_name' => 'John', 'last_name' => 'Doe',
         'profile' => ['id' => $user->profile->id, 'title' => 'Big Boss update']];
+        $user = Factory::update(User::class, $update_data);
+
+        $this->assertNotNull($user->profile);
+        $this->seeInDatabase('users', array_only($update_data, ['id', 'first_name', 'last_name']));
+        $this->seeInDatabase('profiles', array_get($update_data, 'profile'));
+    }
+
+    public function testUpdateNoIdOnHasOne()
+    {
+        $data = ['first_name' => 'John', 'last_name' => 'Doe'];
+        $user = Factory::create(User::class, $data);
+        $update_data = ['id' => $user->id, 'first_name' => 'John', 'last_name' => 'Doe',
+        'profile' => ['title' => 'Big Boss update']];
         $user = Factory::update(User::class, $update_data);
 
         $this->assertNotNull($user->profile);
@@ -128,6 +155,23 @@ class FastModelFactoryTest extends Illuminate\Foundation\Testing\TestCase
             'posts' => [
                 ['id' => $user->posts[0]->id, 'title' => 'Post 1 update'],
                 ['id' => $user->posts[1]->id, 'title' => 'Post 2 udpate']]];
+        $user = Factory::update(User::class, $update_data);
+
+        $this->assertNotNull($user->posts);
+        $this->seeInDatabase('users', array_only($update_data, ['id', 'first_name', 'last_name']));
+        $this->seeInDatabase('posts', array_get($update_data, 'posts.0'));
+        $this->seeInDatabase('posts', array_get($update_data, 'posts.1'));
+    }
+
+    public function testUpdateNoIdOnHasMany()
+    {
+        $data = ['first_name' => 'John', 'last_name' => 'Doe',
+            'posts' => [['title' => 'Post 1']]];
+        $user = Factory::create(User::class, $data);
+        $update_data = ['id' => $user->id, 'first_name' => 'Moe', 'last_name' => 'Smith',
+            'posts' => [
+                ['id' => $user->posts[0]->id, 'title' => 'Post 1 update'],
+                ['title' => 'Post 2 udpate']]];
         $user = Factory::update(User::class, $update_data);
 
         $this->assertNotNull($user->posts);
