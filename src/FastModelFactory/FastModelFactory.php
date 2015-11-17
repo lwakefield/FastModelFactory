@@ -8,27 +8,18 @@ class FastModelFactory
 
     public static function create($class_name, $input = null)
     {
-        $input = $input != null ? $input : Input::all();
-        $model = static::getNewInstance($class_name);
-        $attributes = $model->getAttrsFromInput($input);
-        foreach ($attributes as $key => $val) {
-            if (!$model->isAttrRelation($key)) {
-                $model->setAttribute($key, $val);
-            }
-        }
-        $model->save();
-        foreach ($attributes as $key => $val) {
-            if ($model->isAttrRelation($key)) {
-                $model->createRelation($key, $val);
-            }
-        }
-        return $model->getModel();
+        return static::createOrUpdate($class_name, $input, false);
     }
 
     public static function update($class_name, $input = null)
     {
+        return static::createOrUpdate($class_name, $input, true);
+    }
+
+    private static function createOrUpdate($class_name, $input = null, $update = false)
+    {
         $input = $input != null ? $input : Input::all();
-        $model = array_key_exists('id', $input) ?
+        $model = $update && array_key_exists('id', $input) ?
             static::findNewInstance($class_name, array_get($input, 'id')) :
             static::getNewInstance($class_name);
         $attributes = $model->getAttrsFromInput($input);
@@ -40,7 +31,9 @@ class FastModelFactory
         $model->save();
         foreach ($attributes as $key => $val) {
             if ($model->isAttrRelation($key)) {
-                $model->updateRelation($key, $val);
+                $update ?
+                    $model->updateRelation($key, $val) :
+                    $model->createRelation($key, $val);
             }
         }
         return $model->getModel();
