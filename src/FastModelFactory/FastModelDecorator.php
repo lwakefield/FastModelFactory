@@ -36,41 +36,39 @@ class FastModelDecorator
 
     public function createRelation($relation, $attrs)
     {
-        $relation = $this->$relation();
-        if (is_a($relation, 'Illuminate\Database\Eloquent\Relations\BelongsTo')) {
-            $related_model = FastModelFactory::create(get_class($relation->getRelated()),
-                $attrs);
-            $relation->associate($related_model);
-        } else if (is_a($relation, 'Illuminate\Database\Eloquent\Relations\HasOne')) {
-            $related_model = FastModelFactory::create(get_class($relation->getRelated()),
-                $attrs);
-            $relation->save($related_model);
-        } else if (is_a($relation, 'Illuminate\Database\Eloquent\Relations\HasMany')) {
-            $models = [];
-            foreach ($attrs as $nested_attrs) {
-                $models[] = FastModelFactory::create(get_class($relation->getRelated()),
-                    $nested_attrs);
-            }
-            $relation->saveMany($models);
-        }
+        return $this->createOrUpdateRelation($relation, $attrs, false);
     }
 
     public function updateRelation($relation, $attrs)
     {
+        return $this->createOrUpdateRelation($relation, $attrs, true);
+    }
+
+    private function createOrUpdateRelation($relation, $attrs, $update=false)
+    {
         $relation = $this->$relation();
         if (is_a($relation, 'Illuminate\Database\Eloquent\Relations\BelongsTo')) {
-            $related_model = FastModelFactory::update(get_class($relation->getRelated()),
-                $attrs);
+            $related_model = $update ?
+                FastModelFactory::update(get_class($relation->getRelated()),
+                    $attrs) :
+                FastModelFactory::create(get_class($relation->getRelated()),
+                    $attrs);
             $relation->associate($related_model);
         } else if (is_a($relation, 'Illuminate\Database\Eloquent\Relations\HasOne')) {
-            $related_model = FastModelFactory::update(get_class($relation->getRelated()),
-                $attrs);
+            $related_model = $update ? 
+                FastModelFactory::update(get_class($relation->getRelated()),
+                    $attrs) :
+                FastModelFactory::create(get_class($relation->getRelated()),
+                    $attrs);
             $relation->save($related_model);
         } else if (is_a($relation, 'Illuminate\Database\Eloquent\Relations\HasMany')) {
             $models = [];
             foreach ($attrs as $nested_attrs) {
-                $models[] = FastModelFactory::update(get_class($relation->getRelated()),
-                    $nested_attrs);
+                $models[] = $update ?
+                    FastModelFactory::update(get_class($relation->getRelated()),
+                        $nested_attrs) :
+                    FastModelFactory::create(get_class($relation->getRelated()),
+                        $nested_attrs);
             }
             $relation->saveMany($models);
         }
